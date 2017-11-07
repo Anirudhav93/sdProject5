@@ -47,7 +47,7 @@ def LoadTrainData(visualization):
             axs[i].imshow(img)
         plt.show()
         return
-    print(len(cars), len(nonCars))
+    #print(len(cars), len(nonCars))
     
     return cars, nonCars
 
@@ -145,17 +145,16 @@ def BuildAClassifier():
     X_train, y_train, X_test, y_test = PrepareData()
     clf = LinearSVC()
     clf.fit(X_train, y_train)
-    return clf
+    return clf, X_train, y_train, X_test, y_test
 
 def EvaluateClassifier():
-    clf = BuildAClassifier()
-    X_train, y_train, X_test, y_test = PrepareData()
+    clf, X_train, y_train, X_test, y_test = BuildAClassifier()
     pred = clf.predict(X_test)
     accuracy = score(y_test, pred)
     print('the accuracy is :-',  accuracy)
     return accuracy
 
-def slidingWindow(img, ystart, ystop, scale, cspace, hog_channel, svc, X_scaler, orient, 
+def SlidingWindow(img, ystart, ystop, scale, cspace, hog_channel, svc, X_scaler, orient, 
               pix_per_cell, cell_per_block, spatial_size, hist_bins, show_all_rectangles=False):
     
     # array of rectangles where cars were detected
@@ -234,5 +233,164 @@ def slidingWindow(img, ystart, ystop, scale, cspace, hog_channel, svc, X_scaler,
                 rectangles.append(((xbox_left, ytop_draw+ystart),(xbox_left+win_draw,ytop_draw+win_draw+ystart)))
                 
     return rectangles
+
+def drawOnImage(img, bboxes, color=(0, 0, 255), thick=6):
+    # Make a copy of the image
+    imcopy = np.copy(img)
+    random_color = False
+    # Iterate through the bounding boxes
+    for bbox in bboxes:
+        if color == 'random' or random_color:
+            color = (np.random.randint(0,255), np.random.randint(0,255), np.random.randint(0,255))
+            random_color = True
+        # Draw a rectangle given bbox coordinates
+        cv2.rectangle(imcopy, bbox[0], bbox[1], color, thick)
+    # Return the image copy with boxes drawn
+    return imcopy
+
+def Test():
+    
+    test_images = glob.glob('./test_images/test*.jpg')
+    
+    fig, axs = plt.subplots(3, 2, figsize=(16,14))
+    fig.subplots_adjust(hspace = .004, wspace=.002)
+    axs = axs.ravel()
+    
+    for i, im in enumerate(test_images):
+        axs[i].imshow(Pipeline(mpimg.imread(im)))
+        axs[i].axis('off')
+    plt.show()
+    '''
+    car_images, noncar_images = LoadTrainData(False)
+    car_img = mpimg.imread(car_images[5])
+    _, car_dst = getHOG(car_img[:,:,2], 9, 8, 8, vis=True, feature_vec=True)
+    noncar_img = mpimg.imread(noncar_images[5])
+    _, noncar_dst = getHOG(noncar_img[:,:,2], 9, 8, 8, vis=True, feature_vec=True)
+    
+    # Visualize 
+    f, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(7,7))
+    f.subplots_adjust(hspace = .4, wspace=.2)
+    ax1.imshow(car_img)
+    ax1.set_title('Car Image', fontsize=16)
+    ax2.imshow(car_dst, cmap='gray')
+    ax2.set_title('Car HOG', fontsize=16)
+    ax3.imshow(noncar_img)
+    ax3.set_title('Non-Car Image', fontsize=16)
+    ax4.imshow(noncar_dst, cmap='gray')
+    ax4.set_title('Non-Car HOG', fontsize=16)
+    plt.show()
+    '''
+    return
+
+def CombineWindowSearches():
+    test_img = mpimg.imread('./test_images/test1.jpg')
+    svc, _, _, _, _ = BuildAClassifier()
+    rectangles = []
+    
+    colorspace = 'YUV' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+    orient = 11
+    pix_per_cell = 16
+    cell_per_block = 2
+    hog_channel = 'ALL' # Can be 0, 1, 2, or "ALL"
+    
+    
+    ystart = 400
+    ystop = 464
+    scale = 1.0
+    rectangles.append(SlidingWindow(test_img, ystart, ystop, scale, colorspace, hog_channel, svc, None, 
+                           orient, pix_per_cell, cell_per_block, None, None))
+    ystart = 416
+    ystop = 480
+    scale = 1.0
+    rectangles.append(SlidingWindow(test_img, ystart, ystop, scale, colorspace, hog_channel, svc, None, 
+                           orient, pix_per_cell, cell_per_block, None, None))
+    ystart = 400
+    ystop = 496
+    scale = 1.5
+    rectangles.append(SlidingWindow(test_img, ystart, ystop, scale, colorspace, hog_channel, svc, None, 
+                           orient, pix_per_cell, cell_per_block, None, None))
+    ystart = 432
+    ystop = 528
+    scale = 1.5
+    rectangles.append(SlidingWindow(test_img, ystart, ystop, scale, colorspace, hog_channel, svc, None, 
+                           orient, pix_per_cell, cell_per_block, None, None))
+    ystart = 400
+    ystop = 528
+    scale = 2.0
+    rectangles.append(SlidingWindow(test_img, ystart, ystop, scale, colorspace, hog_channel, svc, None, 
+                           orient, pix_per_cell, cell_per_block, None, None))
+    ystart = 432
+    ystop = 560
+    scale = 2.0
+    rectangles.append(SlidingWindow(test_img, ystart, ystop, scale, colorspace, hog_channel, svc, None, 
+                           orient, pix_per_cell, cell_per_block, None, None))
+    ystart = 400
+    ystop = 596
+    scale = 3.5
+    rectangles.append(SlidingWindow(test_img, ystart, ystop, scale, colorspace, hog_channel, svc, None, 
+                           orient, pix_per_cell, cell_per_block, None, None))
+    ystart = 464
+    ystop = 660
+    scale = 3.5
+    rectangles.append(SlidingWindow(test_img, ystart, ystop, scale, colorspace, hog_channel, svc, None, 
+                           orient, pix_per_cell, cell_per_block, None, None))
+    
+    # apparently this is the best way to flatten a list of lists
+    rectangles = [item for sublist in rectangles for item in sublist] 
+    test_img_rects = drawOnImage(test_img, rectangles, color='random', thick=2)
+    '''
+    plt.figure(figsize=(10,10))
+    plt.imshow(test_img_rects)
+    plt.show()
+    '''
+    return rectangles
+
+def HeatMap(heatmap, bbox_list):
+    # Iterate through list of bboxes
+    for box in bbox_list:
+        # Add += 1 for all pixels inside each bbox
+        # Assuming each "box" takes the form ((x1, y1), (x2, y2))
+        heatmap[box[0][1]:box[1][1], box[0][0]:box[1][0]] += 1
+
+    # Return updated heatmap
+    return heatmap
+
+def ThresholdImage(heatmap, threshold):
+    # Zero out pixels below the threshold
+    heatmap[heatmap <= threshold] = 0
+    # Return thresholded map
+    return heatmap
+
+def LabelImage(heatmap_img):
+    ThresholdImage(heatmap_img, 1)
+    labels = label(heatmap_img)
+    return labels
+
+def DrawFinal(img, labels):
+    # Iterate through all detected cars
+    rects = []
+    for car_number in range(1, labels[1]+1):
+        # Find pixels with each car_number label value
+        nonzero = (labels[0] == car_number).nonzero()
+        # Identify x and y values of those pixels
+        nonzeroy = np.array(nonzero[0])
+        nonzerox = np.array(nonzero[1])
+        # Define a bounding box based on min/max x and y
+        bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
+        rects.append(bbox)
+        # Draw the box on the image
+        cv2.rectangle(img, bbox[0], bbox[1], (0,0,255), 6)
+    # Return the image and final rectangles
+    return img, rects
+
+def Pipeline(img):
+    rectangles = CombineWindowSearches()
+    heatmap_img = np.zeros_like(img[:,:,0])
+    heatmap_img = HeatMap(heatmap_img, rectangles)
+    heatmap_img = ThresholdImage(heatmap_img, 2)
+    labels = LabelImage(heatmap_img)
+    draw_img, rects = DrawFinal(np.copy(img), labels)
+    return draw_img
+
 if __name__ == "__main__":
-    LoadTrainData(False)
+    Test()
