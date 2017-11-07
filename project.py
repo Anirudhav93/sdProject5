@@ -337,8 +337,8 @@ def CombineWindowSearches(test_img):
     
     # apparently this is the best way to flatten a list of lists
     rectangles = [item for sublist in rectangles for item in sublist] 
-    test_img_rects = drawOnImage(test_img, rectangles, color='random', thick=2)
     '''
+    test_img_rects = drawOnImage(test_img, rectangles, color='random', thick=2)
     plt.figure(figsize=(10,10))
     plt.imshow(test_img_rects)
     plt.show()
@@ -385,12 +385,36 @@ def DrawFinal(img, labels):
 
 def Pipeline(img):
     rectangles = CombineWindowSearches(img)
+    if len(rectangles) > 0:
+        det.add_rects(rectangles)
+    
     heatmap_img = np.zeros_like(img[:,:,0])
-    heatmap_img = HeatMap(heatmap_img, rectangles)
-    heatmap_img = ThresholdImage(heatmap_img, 1)
+    for rect_set in det.prev_rects:
+        heatmap_img = HeatMap(heatmap_img, rect_set)
+    heatmap_img = ThresholdImage(heatmap_img, 1 + len(det.prev_rects)//2)
+     
     labels = LabelImage(heatmap_img)
-    draw_img, rects = DrawFinal(np.copy(img), labels)
+    draw_img, rect = DrawFinal(np.copy(img), labels)
     return draw_img
 
+def ProcessVideo():
+    video_output1 = 'project_video_output.mp4'
+    video_input1 = VideoFileClip('project_video.mp4')#.subclip(22,26)
+    processed_video = video_input1.fl_image(Pipeline)
+    processed_video.write_videofile(video_output1, audio=False)
+    return
+
+class Vehicle_Detect():
+    def __init__(self):
+        # history of rectangles previous n frames
+        self.prev_rects = [] 
+        
+    def add_rects(self, rects):
+        self.prev_rects.append(rects)
+        if len(self.prev_rects) > 15:
+            # throw out oldest rectangle set(s)
+            self.prev_rects = self.prev_rects[len(self.prev_rects)-15:]
 if __name__ == "__main__":
-    Test()
+    #Test()
+    det = Vehicle_Detect()
+    ProcessVideo()
