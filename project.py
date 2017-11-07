@@ -282,8 +282,8 @@ def Test():
     '''
     return
 
-def CombineWindowSearches():
-    test_img = mpimg.imread('./test_images/test1.jpg')
+def CombineWindowSearches(test_img):
+    #test_img = mpimg.imread('./test_images/test1.jpg')
     svc, _, _, _, _ = BuildAClassifier()
     rectangles = []
     
@@ -384,10 +384,10 @@ def DrawFinal(img, labels):
     return img, rects
 
 def Pipeline(img):
-    rectangles = CombineWindowSearches()
+    rectangles = CombineWindowSearches(img)
     heatmap_img = np.zeros_like(img[:,:,0])
     heatmap_img = HeatMap(heatmap_img, rectangles)
-    heatmap_img = ThresholdImage(heatmap_img, 2)
+    heatmap_img = ThresholdImage(heatmap_img, 1)
     labels = LabelImage(heatmap_img)
     draw_img, rects = DrawFinal(np.copy(img), labels)
     return draw_img
