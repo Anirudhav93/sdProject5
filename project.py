@@ -284,7 +284,6 @@ def Test():
 
 def CombineWindowSearches(test_img):
     #test_img = mpimg.imread('./test_images/test1.jpg')
-    svc, _, _, _, _ = BuildAClassifier()
     rectangles = []
     
     colorspace = 'YUV' # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
@@ -416,5 +415,6 @@ class Vehicle_Detect():
             self.prev_rects = self.prev_rects[len(self.prev_rects)-15:]
 if __name__ == "__main__":
     #Test()
+    svc, _, _, _, _ = BuildAClassifier()
     det = Vehicle_Detect()
     ProcessVideo()
